@@ -12,6 +12,9 @@ const messageTemplate = document.querySelector('#message-template').innerHTML;
 const linkTemplate = document.querySelector('#link-template').innerHTML;
 const dateFormat = 'HH:mm:ss';
 
+// Options
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true });
+
 $messageFormButton.setAttribute('disabled', true);
 
 /**
@@ -86,3 +89,5 @@ $sendLocationButton.addEventListener('click', () => {
     });
   });
 });
+
+socket.emit('join', { username, room });

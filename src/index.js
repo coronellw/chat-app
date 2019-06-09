@@ -9,6 +9,8 @@ const {
   generateLocationMessage,
 } = require('./utils/messages');
 
+const Users = require('./utils/users');
+
 const port = process.env.PORT || 3000;
 
 const app = express();
@@ -20,30 +22,39 @@ const publicDirPath = path.join(__dirname, '../public');
 app.use(express.static(publicDirPath));
 
 io.on('connection', (socket) => {
-  socket.emit('message', generateMessage('Welcome!!!'));
-  socket.broadcast.emit('message', generateMessage('A new user has joined!'));
+
+  socket.on('join', ({ username, room }) => {
+    socket.join(room)
+    const resp = Users.addUser({id: socket.id, username, room});
+    if (resp.error){
+      socket.emit('message', generateMessage(resp.error))
+    } else {
+      socket.emit('message', generateMessage('Welcome!!!'));
+      socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+    }
+  });
 
   socket.on('sendMessage', (msg, callback) => {
     const filter = new Filter();
 
-    if(filter.isProfane(msg)){
+    if (filter.isProfane(msg)) {
       return callback('Profanity is not allowed')
     }
 
-    io.emit('message', generateMessage(`${socket.id}: ${msg}`));
+    io.to('bog').emit('message', generateMessage(msg));
+    callback();
+  });
+
+  socket.on('sendLocation', ({ latitude, longitude }, callback) => {
+    socket.broadcast.emit(
+      'locationMessage',
+      generateLocationMessage(`https://google.com/maps?q=${latitude},${longitude}`
+      ));
     callback();
   });
 
   socket.on('disconnect', () => {
-    io.emit('message',generateMessage('A user has left'))
-  });
-
-  socket.on('sendLocation', ({latitude, longitude}, callback) => {
-    socket.broadcast.emit(
-      'locationMessage',
-      generateLocationMessage(`https://google.com/maps?q=${latitude},${longitude}`
-    ));
-    callback();
+    io.emit('message', generateMessage('A user has left'))
   });
 
   socket.on('typing', () => {
