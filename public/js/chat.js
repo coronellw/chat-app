@@ -6,10 +6,12 @@ const $messageFormInput = $messageForm.querySelector('input');
 const $messageFormButton = $messageForm.querySelector('button')
 const $sendLocationButton = document.querySelector('#send-location');
 const $messages = document.querySelector('#messages');
+const $users = document.querySelector('#users');
 
 // Templates
 const messageTemplate = document.querySelector('#message-template').innerHTML;
 const linkTemplate = document.querySelector('#link-template').innerHTML;
+const usersTemplate = document.querySelector('#users-template').innerHTML;
 const dateFormat = 'HH:mm:ss';
 
 // Options
@@ -28,9 +30,11 @@ socket.on('message', (msg) => {
   console.log(msg);
 
   const html = Mustache.render(messageTemplate, {
+    username: msg.username,
     msg: msg.text,
     createdAt: moment(msg.createdAt).format(dateFormat)
   });
+  
   $messages.insertAdjacentHTML('beforeend', html);
 });
 
@@ -45,6 +49,13 @@ socket.on('locationMessage', url => {
   })
   $messages.insertAdjacentHTML('beforeend', html);
 });
+
+socket.on('updateUserList', users => {
+  const html = Mustache.render(usersTemplate, {
+    users
+  });
+  $users.innerHTML = html;
+})
 
 /**
  * All event listener, potential emitters
@@ -90,4 +101,6 @@ $sendLocationButton.addEventListener('click', () => {
   });
 });
 
-socket.emit('join', { username, room });
+socket.emit('join', { username, room }, error => {
+
+});
