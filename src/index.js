@@ -97,7 +97,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing', () => {
-    const user = Users.getUser(socket.id);
+    const user = getUser(socket.id);
     socket.broadcast.to(user.room).emit('typing', `${user.username} is typing a message`);
   })
 });
